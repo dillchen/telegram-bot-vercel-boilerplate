@@ -32,3 +32,15 @@ Feel free to create PR!
 ## Demo
 
 You can see a working version of the bot at [@Node_api_m_bot](https://t.me/Node_api_m_bot)
+
+------
+Experiments
+
+1. Grab API Route from Common
+2. Test Listening to Messages and Check for Reaction
+
+To Do for Spike for ICs?
+0. Test Event Emitting from Common Outbox
+1. Deleting messages as part of flow, and holding a little bit more complex state
+2. Actually making a transaction
+3. Grab Price Info + Format https://commonwealth.im/api/v1/community.getStakeHistoricalPrice?batch=1&input=%7B%220%22%3A%7B%22past_date_epoch%22%3A1713975884.337%7D%7D

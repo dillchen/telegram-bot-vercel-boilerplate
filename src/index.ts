@@ -1,6 +1,6 @@
 import { Telegraf } from 'telegraf';
 
-import { about, appCommand, coinRateCommand, setupCoinRateHandlers } from './commands';
+import { about, appCommand, coinRateCommand, tickerCommand, setupCoinRateHandlers } from './commands';
 import { greeting } from './text';
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { development, production } from './core';
@@ -18,6 +18,7 @@ async function setupBot() {
       { command: 'help', description: 'How to use the bot' },
       { command: 'about', description: 'Information about the bot' },
       { command: 'app', description: 'Access the web app' },
+      { command: 'tickers', description: 'Coolest tokens'},
       { command: 'rates', description: 'Get cryptocurrency rates' }
     ];
 
@@ -44,10 +45,37 @@ async function setupBot() {
     bot.help((ctx) => ctx.reply('Send me a sticker'));
     bot.command('about', about());
     bot.command('app', appCommand());
+    bot.command('tickers', tickerCommand);
     bot.command('rates', coinRateCommand); // Ensure coinRateCommand is a function returning a middleware
     setupCoinRateHandlers(bot); // Setup additional handlers for coin rates
-    bot.on('message', greeting());
+    bot.on('message', (ctx) => {
+      // Check if the message is from a group
+      if (ctx.chat.type === 'group' || ctx.chat.type === 'supergroup') {
+        // Handle group-specific logic here
+        ctx.reply('Hello group!');
+      } else {
+        // Handle private chat
+        greeting()(ctx);
+      }
+    });
 
+    // Log when receiving a reaction update and respond if thumbs up
+    bot.on('message_reaction', (ctx) => {
+      console.log('Received a message reaction:', ctx.update);
+
+      const hasThumbsUp = ctx.update.message_reaction.new_reaction.some(reaction => 
+        reaction.type === 'emoji' && reaction.emoji === '👍'
+      );
+      
+      if (hasThumbsUp) {
+        ctx.reply('Registered your upvote: 👍, this is now in 3rd place');
+      }
+    });
+
+    // Log when receiving a message reaction count update
+    bot.on('message_reaction_count', (ctx) => {
+      console.log('Received a message reaction count update:', ctx.update);
+    });
     // Launch the bot in long-polling mode
     console.log('Bot launched successfully');
   } catch (error) {

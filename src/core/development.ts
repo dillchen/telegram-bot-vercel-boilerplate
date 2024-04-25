@@ -12,6 +12,11 @@ const development = async (bot: Telegraf<Context<Update>>) => {
   await bot.telegram.deleteWebhook();
   debug(`${botInfo} starting polling`);
 
+  // Specify update types for polling
+  await bot.launch({
+    allowedUpdates: ['message', 'message_reaction', 'message_reaction_count']
+  });
+
   await bot.launch();
 
   process.once('SIGINT', () => bot.stop('SIGINT'));
