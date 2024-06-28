@@ -43,19 +43,13 @@ async function setupBot() {
       return chatUsername === ALLOWED_GROUP_USERNAME.replace('@', '');
     };
 
-    // Welcome message
     const welcomeMessage = `
-    📊 *Dashboard*
+    🪙 Welcome to Common: coin, click, earn, vote
 
-    🏠 *Home*
-
-    🔥 *Trending Communities*
-
-    ©️ *Common*
-    📝 1043 new threads created this month
-
-    Ξ *Ethereum*
-    📝 83 new threads created this month
+    💰 Coin your idea: each message can become a coin
+    🎁 Reward your community: each action, like reaction or msg can earn coins
+    🛒 Buy coins or click to earn coins
+    🗳️ Use coins to vote on things to do
     `;
 
     const welcomeMessageWithButton = Markup.inlineKeyboard([
@@ -66,9 +60,9 @@ async function setupBot() {
     bot.start((ctx) => {
       if ('username' in ctx.chat && isAllowedGroup(ctx.chat.username)) {
         ctx.replyWithPhoto(
-          { source: './static/image.png' }, // Replace with the actual path to your image
+          { source: './static/image.png' },
           {
-            caption: welcomeMessage,
+            caption: `${welcomeMessage}`,
             parse_mode: 'MarkdownV2',
             ...welcomeMessageWithButton
           }
@@ -88,9 +82,9 @@ async function setupBot() {
       if ('username' in ctx.chat && isAllowedGroup(ctx.chat.username)) {
         // Handle allowed group-specific logic here
         ctx.replyWithPhoto(
-          { source: './static/image.png' }, // Replace with the actual path to your image
+          { source: './static/image.png' },
           {
-            caption: welcomeMessage,
+            caption: `${welcomeMessage}`,
             parse_mode: 'MarkdownV2',
             ...welcomeMessageWithButton
           }
