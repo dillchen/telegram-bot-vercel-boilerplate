@@ -44,3 +44,15 @@ To Do for Spike for ICs?
 1. Deleting messages as part of flow, and holding a little bit more complex state
 2. Actually making a transaction
 3. Grab Price Info + Format https://commonwealth.im/api/v1/community.getStakeHistoricalPrice?batch=1&input=%7B%220%22%3A%7B%22past_date_epoch%22%3A1713975884.337%7D%7D
+4. Create GC Based on Launch
+
+Flow
+1. Announcements Channel:
+    - https://t.me/+pajET1zwADM5ZmFh
+    - default message should be a link to the Bot
+2. 
+
+
+Dev Flow 
+1. Local Common Instance
+2. Invite Link???

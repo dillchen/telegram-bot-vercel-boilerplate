@@ -1,4 +1,4 @@
-import { Telegraf } from 'telegraf';
+import { Markup, Telegraf } from 'telegraf';
 
 import { about, appCommand, coinRateCommand, tickerCommand, setupCoinRateHandlers } from './commands';
 import { greeting } from './text';
@@ -7,6 +7,7 @@ import { development, production } from './core';
 
 const BOT_TOKEN = process.env.BOT_TOKEN || '';
 const ENVIRONMENT = process.env.NODE_ENV || '';
+const ALLOWED_GROUP_USERNAME = '@testingbot1111111';
 
 const bot = new Telegraf(BOT_TOKEN);
 
@@ -29,29 +30,74 @@ async function setupBot() {
     // Set chat menu button
     await bot.telegram.setChatMenuButton({
       menuButton: {
-        type: 'commands',
-        // Uncomment below to switch to web app menu button
-        // type: 'web_app',
-        // text: 'Open App',
-        // web_app: {
-        //   url: 'https://common.xyz'
-        // }
+        type: 'web_app',
+        text: 'Open App',
+        web_app: {
+          url: 'https://common.xyz'
+        }
       }
     });
     console.log('Web App menu button set successfully');
 
-    // Setup command handlers
-    bot.start((ctx) => ctx.reply('Welcome'));
+    const isAllowedGroup = (chatUsername: string | undefined): boolean => {
+      return chatUsername === ALLOWED_GROUP_USERNAME.replace('@', '');
+    };
+
+    // Welcome message
+    const welcomeMessage = `
+    📊 *Dashboard*
+
+    🏠 *Home*
+
+    🔥 *Trending Communities*
+
+    ©️ *Common*
+    📝 1043 new threads created this month
+
+    Ξ *Ethereum*
+    📝 83 new threads created this month
+    `;
+
+    const welcomeMessageWithButton = Markup.inlineKeyboard([
+      Markup.button.url('Open Bot', 'https://t.me/Trying11111111bot')
+    ]);
+
+    // Refactor bot.start
+    bot.start((ctx) => {
+      if ('username' in ctx.chat && isAllowedGroup(ctx.chat.username)) {
+        ctx.replyWithPhoto(
+          { source: './static/image.png' }, // Replace with the actual path to your image
+          {
+            caption: welcomeMessage,
+            parse_mode: 'MarkdownV2',
+            ...welcomeMessageWithButton
+          }
+        );
+      } else {
+        ctx.reply('Welcome');
+      }
+    });
     bot.help((ctx) => ctx.reply('Send me a sticker'));
     bot.command('about', about());
     bot.command('app', appCommand());
     bot.command('tickers', tickerCommand);
     bot.command('rates', coinRateCommand); // Ensure coinRateCommand is a function returning a middleware
     setupCoinRateHandlers(bot); // Setup additional handlers for coin rates
+    // Refactor bot.on('message')
     bot.on('message', (ctx) => {
-      // Check if the message is from a group
-      if (ctx.chat.type === 'group' || ctx.chat.type === 'supergroup') {
-        // Handle group-specific logic here
+      if ('username' in ctx.chat && isAllowedGroup(ctx.chat.username)) {
+        // Handle allowed group-specific logic here
+        ctx.replyWithPhoto(
+          { source: './static/image.png' }, // Replace with the actual path to your image
+          {
+            caption: welcomeMessage,
+            parse_mode: 'MarkdownV2',
+            ...welcomeMessageWithButton
+          }
+        );
+        // ctx.reply('Hello allowed group!');
+      } else if (ctx.chat.type === 'group' || ctx.chat.type === 'supergroup') {
+        // Handle other group-specific logic here
         ctx.reply('Hello group!');
       } else {
         // Handle private chat
