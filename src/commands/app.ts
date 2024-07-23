@@ -7,6 +7,10 @@ const appCommand = () => async (ctx: Context) => {
     // Determine if the current menu button is set to the web app or not
     const isWebApp = currentMenu && currentMenu.type === 'web_app';
 
+    const webAppUrl = process.env.NODE_ENV === 'production' 
+    ? 'https://commonwealth.im' 
+    : process.env.LOCAL_URL || 'https://commonwealth.im';
+
     if (isWebApp) {
         // If currently a web app, switch to commands menu
         await ctx.setChatMenuButton({ type: 'commands' })
@@ -23,7 +27,7 @@ const appCommand = () => async (ctx: Context) => {
             type: 'web_app' as 'web_app',
             text: 'Launch Common',
             web_app: {
-                url: 'https://commonwealth.im'
+                url: webAppUrl
             }
         };
 

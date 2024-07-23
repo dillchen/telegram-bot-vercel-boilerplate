@@ -1,10 +1,11 @@
 import { Context, Telegraf } from 'telegraf';
 import { Update } from 'telegraf/typings/core/types/typegram';
 import createDebug from 'debug';
+import { MyContext } from '../types';
 
 const debug = createDebug('bot:dev');
 
-const development = async (bot: Telegraf<Context<Update>>) => {
+const development = async (bot: Telegraf<MyContext>) => {
   const botInfo = (await bot.telegram.getMe()).username;
 
   debug('Bot runs in development mode');
@@ -14,7 +15,7 @@ const development = async (bot: Telegraf<Context<Update>>) => {
 
   // Specify update types for polling
   await bot.launch({
-    allowedUpdates: ['message', 'message_reaction', 'message_reaction_count']
+    allowedUpdates: ['message', 'callback_query', 'message_reaction', 'message_reaction_count']
   });
 
   await bot.launch();

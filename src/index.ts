@@ -1,27 +1,42 @@
-import { Markup, Telegraf } from 'telegraf';
+import { Markup, Telegraf, session } from 'telegraf';
 
-import { about, appCommand, coinRateCommand, tickerCommand, setupCoinRateHandlers } from './commands';
+import { about, appCommand, coinRateCommand, setupLaunchHandlers, tickerCommand, setupCoinRateHandlers, launchCommand,  } from './commands';
 import { greeting } from './text';
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { development, production } from './core';
+import { MyContext } from './types'; // Make sure to create this file if it doesn't exist
 
 const BOT_TOKEN = process.env.BOT_TOKEN || '';
 const ENVIRONMENT = process.env.NODE_ENV || '';
 const ALLOWED_GROUP_USERNAME = '@testingbot1111111';
 
-const bot = new Telegraf(BOT_TOKEN);
+const bot = new Telegraf<MyContext>(process.env.BOT_TOKEN!);
+
 
 async function setupBot() {
   try {
     // Define bot commands
+
+    bot.use(session({
+      defaultSession: () => ({ state: null, communityData: {} })
+    }));
+    
+    setupLaunchHandlers(bot);
+    // setupCoinRateHandlers(bot as Telegraf<MyContext>);
+
     const commands = [
-      { command: 'start', description: 'Welcome message' },
+      { command: 'app', description: 'Access the web app' },
+      { command: 'launch', description: 'Launch a community' },
       { command: 'help', description: 'How to use the bot' },
       { command: 'about', description: 'Information about the bot' },
-      { command: 'app', description: 'Access the web app' },
-      { command: 'tickers', description: 'Coolest tokens'},
+      // { command: 'start', description: 'Welcome message' },
+      // { command: 'tickers', description: 'Coolest tokens'},
       { command: 'rates', description: 'Get cryptocurrency rates' }
     ];
+
+    const webAppUrl = process.env.NODE_ENV === 'production' 
+    ? 'https://commonwealth.im' 
+    : process.env.LOCAL_URL || 'https://commonwealth.im';
 
     // Set bot commands
     await bot.telegram.setMyCommands(commands);
@@ -33,7 +48,7 @@ async function setupBot() {
         type: 'web_app',
         text: 'Open App',
         web_app: {
-          url: 'https://common.xyz'
+          url: webAppUrl
         }
       }
     });
@@ -56,28 +71,24 @@ async function setupBot() {
       Markup.button.url('Open Bot', 'https://t.me/Trying11111111bot')
     ]);
 
+    bot.telegram.setMyDescription(welcomeMessage.trim());
+
     // Refactor bot.start
     bot.start((ctx) => {
-      if ('username' in ctx.chat && isAllowedGroup(ctx.chat.username)) {
-        ctx.replyWithPhoto(
-          { source: './static/image.png' },
-          {
-            caption: `${welcomeMessage}`,
-            parse_mode: 'MarkdownV2',
-            ...welcomeMessageWithButton
-          }
-        );
-      } else {
-        ctx.reply('Welcome');
-      }
+      ctx.replyWithPhoto(
+        { source: './static/image.png' },
+        {
+          caption: `${welcomeMessage}`,
+          parse_mode: 'MarkdownV2',
+          ...welcomeMessageWithButton
+        }
+      );
     });
     bot.help((ctx) => ctx.reply('Send me a sticker'));
     bot.command('about', about());
     bot.command('app', appCommand());
-    bot.command('tickers', tickerCommand);
-    bot.command('rates', coinRateCommand); // Ensure coinRateCommand is a function returning a middleware
-    setupCoinRateHandlers(bot); // Setup additional handlers for coin rates
-    // Refactor bot.on('message')
+    bot.command('launch', (ctx) => launchCommand(ctx));
+    // bot.command('rates', coinRateCommand);
     bot.on('message', (ctx) => {
       if ('username' in ctx.chat && isAllowedGroup(ctx.chat.username)) {
         // Handle allowed group-specific logic here
