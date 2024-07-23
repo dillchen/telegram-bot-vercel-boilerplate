@@ -13,6 +13,9 @@ export const setupLaunchHandlers = (bot: Telegraf<MyContext>) => {
     // Handle icon selection
     bot.action(/select_icon_(\d)/, handleIconSelection);
 
+    // Handle Random Coin generation
+    bot.action(ACTIONS.RANDOM_COIN, handleRandomCommunity);
+
     // Handle cancellation of community creation
     bot.action(ACTIONS.CANCEL_CREATION, async (ctx) => {
         await ctx.answerCbQuery('Community creation cancelled');
@@ -66,6 +69,12 @@ export const setupLaunchHandlers = (bot: Telegraf<MyContext>) => {
         await ctx.answerCbQuery('Link copied to clipboard!', { show_alert: true });
         await ctx.reply(`Here's your share link: ${shareLink}\n(The link has been copied to your clipboard)`);
     });
+
+    // Handle "Generate the Rest" action
+    bot.action(ACTIONS.GENERATE_REST, async (ctx) => {
+        await ctx.answerCbQuery('Generating the rest of your community...');
+        await handleGenerateRest(ctx);
+    });
 };
 
 // Handle different types of text messages based on the current state
@@ -75,23 +84,32 @@ const handleTextMessage = async (ctx: MyContext) => {
     const state = ctx.session.state;
     const text = ctx.message.text;
 
-    if (text === 'Random Coin') {
-        await handleRandomCommunity(ctx);
-    } else if (state === STATES.AWAITING_NAME) {
+    if (state === STATES.AWAITING_NAME) {
         await handleAwaitingName(ctx, text);
     } else if (state === STATES.AWAITING_DESCRIPTION) {
         await handleAwaitingDescription(ctx, text);
     } else if (state === STATES.AWAITING_ADDRESS) {
         await handleAwaitingAddress(ctx, text);
     }
+
+    // Add buttons for "Generate the Rest" and "Cancel" after each step
+    if (state !== null && state !== STATES.AWAITING_ICON_SELECTION) {
+        await ctx.reply('What would you like to do next?',
+            Markup.inlineKeyboard([
+                Markup.button.callback('Generate the Rest', ACTIONS.GENERATE_REST),
+                Markup.button.callback('Cancel', ACTIONS.CANCEL_CREATION)
+            ])
+        );
+    }
 };
 
 // Generate a random community name, description, and icons
 const handleRandomCommunity = async (ctx: MyContext) => {
-    await ctx.reply('Generating a random coin...');
+    await ctx.answerCbQuery('Generating a random coin...');
+    await ctx.editMessageText('Generating a random coin...');
     try {
         const name = await generateText('Generate a random coin name, should be only 2 or 3 words');
-        const description = await generateText(`Generate a short description for a community called '${name}'`);
+        const description = await generateText(`Generate a short description for a community called '${name}'. It should be 140 characters or less.`);
         const iconUrls = await generateImages(description, 4);
 
         ctx.session.communityData = {
@@ -100,15 +118,14 @@ const handleRandomCommunity = async (ctx: MyContext) => {
             potentialIconUrls: iconUrls,
         };
 
-        await ctx.reply(`Generated community name: ${name}`);
-        await ctx.reply(`Generated description: ${description}, now generating icons...`);
+        await ctx.editMessageText(`Generated community name: ${name}\nGenerated description: ${description}\n\nNow generating icons...`);
 
         await sendIconSelectionMessage(ctx, iconUrls);
 
         ctx.session.state = STATES.AWAITING_ICON_SELECTION;
     } catch (error) {
         console.error('Error generating random community:', error);
-        await ctx.reply('Sorry, there was an error generating the random community. Please try again or enter a name manually.');
+        await ctx.editMessageText('Sorry, there was an error generating the random community. Please try again or enter a name manually.');
     }
 };
 
@@ -167,11 +184,32 @@ const sendIconSelectionMessage = async (ctx: MyContext, iconUrls: string[]) => {
     })));
 
     await ctx.reply('Please select an icon for your community:', 
-        Markup.inlineKeyboard(
-            iconUrls.map((_, index) => 
-                Markup.button.callback(`Option ${index + 1}`, `select_icon_${index}`)
-            )
-        )
+        Markup.inlineKeyboard([
+            ...iconUrls.map((_, index) => 
+                Markup.button.callback(`V${index + 1}`, `select_icon_${index}`)
+            ),
+            Markup.button.callback('Cancel', ACTIONS.CANCEL_CREATION)
+        ])
     );
-    console.log('Inline keyboard sent');
+    console.log('Inline keyboard sent with Cancel and Generate Rest buttons');
+};
+
+const handleGenerateRest = async (ctx: MyContext) => {
+    const state = ctx.session.state;
+    
+    if (state === STATES.AWAITING_DESCRIPTION) {
+        const description = await generateText(`Generate a short description for a community called '${ctx.session.communityData.name}'`);
+        ctx.session.communityData.description = description;
+        await ctx.reply(`Generated description: ${description}`);
+    }
+    
+    if (state === STATES.AWAITING_DESCRIPTION || state === STATES.AWAITING_ICON_SELECTION) {
+        await ctx.reply('Generating icons for your community...');
+        const description = ctx.session.communityData.description || ctx.session.communityData.name || 'community';
+        const iconUrls = await generateImages(description, 4);
+        ctx.session.communityData.potentialIconUrls = iconUrls;
+        await sendIconSelectionMessage(ctx, iconUrls);
+    }
+    
+    ctx.session.state = STATES.AWAITING_ICON_SELECTION;
 };

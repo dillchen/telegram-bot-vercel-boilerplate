@@ -13,11 +13,13 @@ export const launchCommand = async (ctx: MyContext) => {
     }
 
     await ctx.reply(
-        'Launch a coin! Type your idea',
-        Markup.keyboard([['Random Coin']])
-            .oneTime()
-            .resize()
+        'Launch a coin! Type your idea or choose "Random Coin". You can cancel the process at any time.',
+        Markup.inlineKeyboard([
+            Markup.button.callback('Random Coin', ACTIONS.RANDOM_COIN),
+            Markup.button.callback('Cancel', ACTIONS.CANCEL_CREATION)
+        ])
     );
+
     ctx.session.state = STATES.AWAITING_NAME;
 };
 
