@@ -33,18 +33,21 @@ export const setupLaunchHandlers = (bot: Telegraf<MyContext>) => {
             2. Requires Contract Launching SDK
             3. (Maybe) Requires additional prompt or something
 
+            https://github.com/hicommonwealth/commonwealth/issues/7780
             */ 
             await new Promise(resolve => setTimeout(resolve, 2000));
             const contractAddress = '0x' + Math.random().toString(16).substr(2, 40);
             const shareLink = `${webAppUrl}/${ctx.session.communityData.name}`;
 
             const successMessage = `
-            Community created successfully!
+            Token created! Go to the app to manage your coin's community and incentives.
             Contract Address: ${contractAddress}`;
+
 
             await ctx.editMessageText(successMessage, 
                 Markup.inlineKeyboard([
-                    Markup.button.callback('Share Link', ACTIONS.SHARE_LINK)
+                    Markup.button.callback('Share Link', ACTIONS.SHARE_LINK),
+                    Markup.button.url('Tap to Earn', shareLink)
                 ])
             );
 
