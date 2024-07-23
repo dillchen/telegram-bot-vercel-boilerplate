@@ -1,4 +1,5 @@
 import { Context } from 'telegraf';
+import { webAppUrl } from '../constants';
 
 const appCommand = () => async (ctx: Context) => {
     // Check the current state of the chat menu button
@@ -6,10 +7,6 @@ const appCommand = () => async (ctx: Context) => {
 
     // Determine if the current menu button is set to the web app or not
     const isWebApp = currentMenu && currentMenu.type === 'web_app';
-
-    const webAppUrl = process.env.NODE_ENV === 'production' 
-    ? 'https://commonwealth.im' 
-    : process.env.LOCAL_URL || 'https://commonwealth.im';
 
     if (isWebApp) {
         // If currently a web app, switch to commands menu

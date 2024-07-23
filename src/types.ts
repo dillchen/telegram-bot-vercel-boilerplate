@@ -13,7 +13,9 @@ export interface MyContext extends Context {
 export interface CommunityData {
     name?: string;
     description?: string;
-    potential_icon_urls?: string[];
-    selected_icon_url?: string;
+    potentialIconUrls?: string[];
+    selectedIconUrl?: string;
     address?: string;
+    shareLink?: string;
+    contractAddress?: string;
 }

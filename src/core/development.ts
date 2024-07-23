@@ -6,22 +6,33 @@ import { MyContext } from '../types';
 const debug = createDebug('bot:dev');
 
 const development = async (bot: Telegraf<MyContext>) => {
-  const botInfo = (await bot.telegram.getMe()).username;
+  console.log('1. Starting development mode setup...');
+  try {
+    console.log('2. Getting bot info...');
+    const botInfo = (await bot.telegram.getMe()).username;
 
-  debug('Bot runs in development mode');
-  debug(`${botInfo} deleting webhook`);
-  await bot.telegram.deleteWebhook();
-  debug(`${botInfo} starting polling`);
+    console.log('3. Deleting webhook...');
+    await bot.telegram.deleteWebhook();
 
-  // Specify update types for polling
-  await bot.launch({
-    allowedUpdates: ['message', 'callback_query', 'message_reaction', 'message_reaction_count']
-  });
+    console.log('4. Preparing to launch bot...');
 
-  await bot.launch();
+    await bot.launch({
+      allowedUpdates: ['message', 'message_reaction', 'message_reaction_count', 'callback_query']
+    }).then(() => {
+      console.log('5. Bot launched successfully in development mode');
+    });
 
-  process.once('SIGINT', () => bot.stop('SIGINT'));
-  process.once('SIGTERM', () => bot.stop('SIGTERM'));
+    process.once('SIGINT', () => {
+      console.log('6. Received SIGINT. Stopping bot...');
+      bot.stop('SIGINT');
+    });
+    process.once('SIGTERM', () => {
+      console.log('7. Received SIGTERM. Stopping bot...');
+      bot.stop('SIGTERM');
+    });
+  } catch (error) {
+    console.error('Error in development setup:', error);
+  }
 };
 
 export { development };

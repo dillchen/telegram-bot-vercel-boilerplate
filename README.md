@@ -49,10 +49,30 @@ To Do for Spike for ICs?
 Flow
 1. Announcements Channel:
     - https://t.me/+pajET1zwADM5ZmFh
-    - default message should be a link to the Bot
-2. 
+    - DONE: default message should be a link to the Bot
 
+2. Intro to Bot, Start Menu needs smth
+    - TODO: Format it as Image
+    - TODO: Wallet / Acct Generation
 
-Dev Flow 
-1. Local Common Instance
-2. Invite Link???
+3. App: DONE:
+    - All the coins
+    - Per Coin
+        - Click to earn???
+        - buy coin
+        - Quests per coin
+    - Login ofc needs to be updated...
+
+4. Bot Flows: IN PROG
+    - New Credentials / Token / Official Name for the Bot in TG
+    - Setup TG Announcement Group? (setup the right permissiosn)
+        - Current: https://t.me/+pajET1zwADM5ZmFh
+    - Use Local Host for now for E2E testing link
+    - Interactions and commands
+        - TODO: Update the start message in DMs
+        - TODO: Format Image from Start link???
+        - TODO: command /launch coin
+        - TODO: command /buy & /sell coin
+        - Newly Launched Coin?
+        - Newly Launched Coin and if there's one then webhook to the bot and display the announcements / DM channels?
+    - Deploy to Vercel

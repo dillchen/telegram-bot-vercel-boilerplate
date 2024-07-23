@@ -1,10 +1,11 @@
 import { Markup, Telegraf, session } from 'telegraf';
 
-import { about, appCommand, coinRateCommand, setupLaunchHandlers, tickerCommand, setupCoinRateHandlers, launchCommand,  } from './commands';
+import { about, appCommand, coinRateCommand, setupLaunchCommand } from './commands';
 import { greeting } from './text';
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { development, production } from './core';
-import { MyContext } from './types'; // Make sure to create this file if it doesn't exist
+import { MyContext } from './types';
+import { webAppUrl } from './constants';
 
 const BOT_TOKEN = process.env.BOT_TOKEN || '';
 const ENVIRONMENT = process.env.NODE_ENV || '';
@@ -20,23 +21,20 @@ async function setupBot() {
     bot.use(session({
       defaultSession: () => ({ state: null, communityData: {} })
     }));
+
     
-    setupLaunchHandlers(bot);
-    // setupCoinRateHandlers(bot as Telegraf<MyContext>);
+    bot.command('app', appCommand());
+    setupLaunchCommand(bot); // handles setup inside
+    bot.command('help', (ctx) => ctx.reply('How to use the bot'));
+    bot.command('about', about());
+    bot.command('rates', coinRateCommand);
 
     const commands = [
       { command: 'app', description: 'Access the web app' },
       { command: 'launch', description: 'Launch a community' },
       { command: 'help', description: 'How to use the bot' },
       { command: 'about', description: 'Information about the bot' },
-      // { command: 'start', description: 'Welcome message' },
-      // { command: 'tickers', description: 'Coolest tokens'},
-      { command: 'rates', description: 'Get cryptocurrency rates' }
     ];
-
-    const webAppUrl = process.env.NODE_ENV === 'production' 
-    ? 'https://commonwealth.im' 
-    : process.env.LOCAL_URL || 'https://commonwealth.im';
 
     // Set bot commands
     await bot.telegram.setMyCommands(commands);
@@ -68,7 +66,7 @@ async function setupBot() {
     `;
 
     const welcomeMessageWithButton = Markup.inlineKeyboard([
-      Markup.button.url('Open Bot', 'https://t.me/Trying11111111bot')
+      Markup.button.url('Open Bot', 'https://t.me/v0_1CommonLaunchBot')
     ]);
 
     bot.telegram.setMyDescription(welcomeMessage.trim());
@@ -85,11 +83,9 @@ async function setupBot() {
       );
     });
     bot.help((ctx) => ctx.reply('Send me a sticker'));
-    bot.command('about', about());
-    bot.command('app', appCommand());
-    bot.command('launch', (ctx) => launchCommand(ctx));
     // bot.command('rates', coinRateCommand);
     bot.on('message', (ctx) => {
+      console.log('Received a message');
       if ('username' in ctx.chat && isAllowedGroup(ctx.chat.username)) {
         // Handle allowed group-specific logic here
         ctx.replyWithPhoto(
@@ -106,7 +102,7 @@ async function setupBot() {
         ctx.reply('Hello group!');
       } else {
         // Handle private chat
-        greeting()(ctx);
+        // greeting()(ctx);
       }
     });
 
@@ -127,6 +123,16 @@ async function setupBot() {
     bot.on('message_reaction_count', (ctx) => {
       console.log('Received a message reaction count update:', ctx.update);
     });
+
+    // Add a catch-all handler to see if any updates are coming through
+    bot.use((ctx) => {
+      console.log('Received an update:', ctx.update);
+    });
+
+    bot.catch((err, ctx) => {
+      console.error('An error occurred during bot execution:', err);
+      console.log('Context of the error:', ctx);
+    });
     // Launch the bot in long-polling mode
     console.log('Bot launched successfully');
   } catch (error) {
@@ -141,4 +147,6 @@ export const startVercel = async (req: VercelRequest, res: VercelResponse) => {
   await production(req, res, bot);
 };
 //dev mode
-ENVIRONMENT !== 'production' && development(bot);
+ENVIRONMENT !== 'production' && development(bot).catch(error => {
+  console.error('Main: Error in development mode:', error);
+});
