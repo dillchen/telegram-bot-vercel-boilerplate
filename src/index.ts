@@ -1,11 +1,17 @@
 import { Markup, Telegraf, session } from 'telegraf';
 
-import { about, appCommand, coinRateCommand, setupLaunchCommand } from './commands';
+import {
+  about,
+  appCommand,
+  coinRateCommand,
+  setupLaunchCommand,
+  setupTradeCommand
+} from './commands';
 import { greeting } from './text';
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { development, production } from './core';
 import { MyContext } from './types';
-import { webAppUrl } from './constants';
+import { webAppUrl } from './utils/constants';
 
 const BOT_TOKEN = process.env.BOT_TOKEN || '';
 const ENVIRONMENT = process.env.NODE_ENV || '';
@@ -19,21 +25,28 @@ async function setupBot() {
     // Define bot commands
 
     bot.use(session({
-      defaultSession: () => ({ state: null, communityData: {} })
+      defaultSession: (): MyContext['session'] => ({
+        state: null,
+        communityData: {},
+        tradeData: { ticker: '', amount: 0, action: 'buy' }
+      })
     }));
 
-    
     bot.command('app', appCommand());
-    setupLaunchCommand(bot); // handles setup inside
+    setupLaunchCommand(bot); // sets up /launch command via commands/launch
+    setupTradeCommand(bot); // sets up /buy and /sell command via commands/trade
     bot.command('help', (ctx) => ctx.reply('How to use the bot'));
     bot.command('about', about());
     bot.command('rates', coinRateCommand);
+    
 
     const commands = [
       { command: 'app', description: 'Access the web app' },
-      { command: 'launch', description: 'Launch a community' },
+      { command: 'launch', description: 'Launch a coin--with built rewards and community' },
       { command: 'help', description: 'How to use the bot' },
       { command: 'about', description: 'Information about the bot' },
+      { command: 'buy', description: 'Buy a token' },
+      { command: 'sell', description: 'Sell a token' },
     ];
 
     // Set bot commands

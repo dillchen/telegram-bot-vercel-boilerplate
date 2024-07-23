@@ -1,7 +1,5 @@
-import { launchCommand, setupLaunchCommand } from './launchCommand';
-import { setupLaunchHandlers } from './launchHandlers';
-
-export { launchCommand, setupLaunchHandlers, setupLaunchCommand };
+export { launchCommand, setupLaunchCommand } from './launchCommand';
+export { setupLaunchHandlers } from './launchHandlers';
 
 /* 
 

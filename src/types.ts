@@ -1,5 +1,4 @@
 import { Context } from 'telegraf';
-import { Update } from 'telegraf/typings/core/types/typegram';
 
 interface SessionData {
     state: string | null;

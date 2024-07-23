@@ -1,5 +1,5 @@
 import { Context } from 'telegraf';
-import { webAppUrl } from '../constants';
+import { webAppUrl } from '../utils/constants';
 
 const appCommand = () => async (ctx: Context) => {
     // Check the current state of the chat menu button
@@ -22,7 +22,7 @@ const appCommand = () => async (ctx: Context) => {
         // If currently commands or not set, switch to web app
         const menuButton = {
             type: 'web_app' as 'web_app',
-            text: 'Launch Common',
+            text: 'Open App',
             web_app: {
                 url: webAppUrl
             }

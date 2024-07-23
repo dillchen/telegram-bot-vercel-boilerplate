@@ -1,7 +1,7 @@
 import { Telegraf, Markup } from 'telegraf';
 import { MyContext } from '../../types';
 import { generateText, generateImages } from '../../utils/openAIHelpers';
-import { STATES, ACTIONS, webAppUrl } from '../../constants';
+import { STATES, ACTIONS, webAppUrl } from '../../utils/constants';
 import { handleIconSelection } from './iconSelectionHandler';
 import { sendLoadingMessage } from '../../utils/messageHelpers';
 

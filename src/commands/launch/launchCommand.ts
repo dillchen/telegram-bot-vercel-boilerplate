@@ -1,7 +1,13 @@
 import { Telegraf, Markup } from 'telegraf';
 import { MyContext, CommunityData } from '../../types';
 import { setupLaunchHandlers } from './launchHandlers';
-import { STATES, ACTIONS } from '../../constants';
+import { STATES, ACTIONS } from '../../utils/constants';
+
+export const setupLaunchCommand = (bot: Telegraf<MyContext>) => {
+    console.log('Setting up launch command');
+    bot.command('launch', launchCommand);
+    setupLaunchHandlers(bot);
+};
 
 export const launchCommand = async (ctx: MyContext) => {
     if (!ctx.session) {
@@ -20,10 +26,4 @@ export const launchCommand = async (ctx: MyContext) => {
     );
     ctx.session.state = STATES.AWAITING_NAME;
     ctx.session.launchMessageId = message.message_id;
-};
-
-export const setupLaunchCommand = (bot: Telegraf<MyContext>) => {
-    console.log('Setting up launch command');
-    bot.command('launch', launchCommand);
-    setupLaunchHandlers(bot);
 };

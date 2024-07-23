@@ -1,6 +1,6 @@
 import { MyContext } from '../../types';
 import { Markup } from 'telegraf';
-import { ACTIONS } from '../../constants';
+import { ACTIONS } from '../../utils/constants';
 
 export const handleIconSelection = async (ctx: MyContext & { match: RegExpExecArray }) => {
     console.log('Icon selection action triggered');
