@@ -1,8 +1,9 @@
 import { Telegraf, Markup } from 'telegraf';
 import { MyContext } from '../../types';
-import { generateText, generateImages } from '../../openAIHelpers';
+import { generateText, generateImages } from '../../utils/openAIHelpers';
 import { STATES, ACTIONS, webAppUrl } from '../../constants';
 import { handleIconSelection } from './iconSelectionHandler';
+import { sendLoadingMessage } from '../../utils/messageHelpers';
 
 export const setupLaunchHandlers = (bot: Telegraf<MyContext>) => {
     console.log('Setting up launch handlers');
@@ -14,12 +15,25 @@ export const setupLaunchHandlers = (bot: Telegraf<MyContext>) => {
     bot.action(/select_icon_(\d)/, handleIconSelection);
 
     // Handle Random Coin generation
-    bot.action(ACTIONS.RANDOM_COIN, handleRandomCommunity);
+    bot.action(ACTIONS.RANDOM_COIN, async (ctx) => {
+        if (ctx.session.launchMessageId) {
+            await ctx.deleteMessage(ctx.session.launchMessageId);
+            delete ctx.session.launchMessageId;
+        }
+        await ctx.answerCbQuery();
+        // const loadingMessage = await sendLoadingMessage(ctx, 'Generating a random coin...');
+        // ctx.session.loadingMessageId = loadingMessage.message_id;
+        await handleRandomCommunity(ctx);
+    });
 
     // Handle cancellation of community creation
     bot.action(ACTIONS.CANCEL_CREATION, async (ctx) => {
+        if (ctx.session.launchMessageId) {
+            await ctx.deleteMessage(ctx.session.launchMessageId);
+            delete ctx.session.launchMessageId;
+        }
         await ctx.answerCbQuery('Community creation cancelled');
-        await ctx.editMessageText('Community creation cancelled. Use /launch to start over.');
+        await ctx.reply('Community creation cancelled. Use /launch to start over.');
         ctx.session.state = null;
     });
 
@@ -72,7 +86,9 @@ export const setupLaunchHandlers = (bot: Telegraf<MyContext>) => {
 
     // Handle "Generate the Rest" action
     bot.action(ACTIONS.GENERATE_REST, async (ctx) => {
-        await ctx.answerCbQuery('Generating the rest of your community...');
+        await ctx.answerCbQuery();
+        // const loadingMessage = await sendLoadingMessage(ctx, 'Generating the rest of your community...');
+        // ctx.session.loadingMessageId = loadingMessage.message_id;
         await handleGenerateRest(ctx);
     });
 };
@@ -105,8 +121,6 @@ const handleTextMessage = async (ctx: MyContext) => {
 
 // Generate a random community name, description, and icons
 const handleRandomCommunity = async (ctx: MyContext) => {
-    await ctx.answerCbQuery('Generating a random coin...');
-    await ctx.editMessageText('Generating a random coin...');
     try {
         const name = await generateText('Generate a random coin name, should be only 2 or 3 words');
         const description = await generateText(`Generate a short description for a community called '${name}'. It should be 140 characters or less.`);
@@ -118,14 +132,28 @@ const handleRandomCommunity = async (ctx: MyContext) => {
             potentialIconUrls: iconUrls,
         };
 
-        await ctx.editMessageText(`Generated community name: ${name}\nGenerated description: ${description}\n\nNow generating icons...`);
+        // Delete the loading message
+        if (ctx.session.loadingMessageId) {
+            await ctx.telegram.deleteMessage(ctx.chat!.id, ctx.session.loadingMessageId);
+            delete ctx.session.loadingMessageId;
+        }
+
+        // Send the generated info
+        const infoMessage = await ctx.reply(
+            `Generated community name: ${name}\nGenerated description: ${description}\n\nNow selecting icons...`
+        );
 
         await sendIconSelectionMessage(ctx, iconUrls);
+
+        // Delete the info message after a short delay
+        setTimeout(async () => {
+            await ctx.telegram.deleteMessage(ctx.chat!.id, infoMessage.message_id);
+        }, 5000);
 
         ctx.session.state = STATES.AWAITING_ICON_SELECTION;
     } catch (error) {
         console.error('Error generating random community:', error);
-        await ctx.editMessageText('Sorry, there was an error generating the random community. Please try again or enter a name manually.');
+        await ctx.reply('Sorry, there was an error generating the random community. Please try again or enter a name manually.');
     }
 };
 
@@ -197,19 +225,37 @@ const sendIconSelectionMessage = async (ctx: MyContext, iconUrls: string[]) => {
 const handleGenerateRest = async (ctx: MyContext) => {
     const state = ctx.session.state;
     
-    if (state === STATES.AWAITING_DESCRIPTION) {
-        const description = await generateText(`Generate a short description for a community called '${ctx.session.communityData.name}'`);
-        ctx.session.communityData.description = description;
-        await ctx.reply(`Generated description: ${description}`);
-    }
-    
-    if (state === STATES.AWAITING_DESCRIPTION || state === STATES.AWAITING_ICON_SELECTION) {
-        await ctx.reply('Generating icons for your community...');
+    try {
+        if (state === STATES.AWAITING_DESCRIPTION) {
+            const description = await generateText(`Generate a short description for a community called '${ctx.session.communityData.name}'`);
+            ctx.session.communityData.description = description;
+        }
+
         const description = ctx.session.communityData.description || ctx.session.communityData.name || 'community';
         const iconUrls = await generateImages(description, 4);
         ctx.session.communityData.potentialIconUrls = iconUrls;
+
+        // Delete the loading message
+        if (ctx.session.loadingMessageId) {
+            await ctx.telegram.deleteMessage(ctx.chat!.id, ctx.session.loadingMessageId);
+            delete ctx.session.loadingMessageId;
+        }
+
+        // Send the generated info
+        const infoMessage = await ctx.reply(
+            `Generated description: ${ctx.session.communityData.description}\n\nNow selecting icons...`
+        );
+
         await sendIconSelectionMessage(ctx, iconUrls);
+
+        // Delete the info message after a short delay
+        setTimeout(async () => {
+            await ctx.telegram.deleteMessage(ctx.chat!.id, infoMessage.message_id);
+        }, 5000);
+
+        ctx.session.state = STATES.AWAITING_ICON_SELECTION;
+    } catch (error) {
+        console.error('Error generating community details:', error);
+        await ctx.reply('Sorry, there was an error generating the community details. Please try again.');
     }
-    
-    ctx.session.state = STATES.AWAITING_ICON_SELECTION;
 };

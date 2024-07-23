@@ -4,6 +4,10 @@ import { Update } from 'telegraf/typings/core/types/typegram';
 interface SessionData {
     state: string | null;
     communityData: CommunityData;
+    tradeData: TradeData;
+    loadingMessageId?: number;
+    launchMessageId?: number;
+    iconMessageIds?: number[];
 }
 
 export interface MyContext extends Context {
@@ -18,4 +22,10 @@ export interface CommunityData {
     address?: string;
     shareLink?: string;
     contractAddress?: string;
+}
+
+export interface TradeData {
+    ticker: string;
+    amount: number;
+    action: 'buy' | 'sell';
 }

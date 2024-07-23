@@ -23,13 +23,15 @@ export const handleIconSelection = async (ctx: MyContext & { match: RegExpExecAr
             const selectedUrl = potentialUrls[selectedIndex];
             ctx.session.communityData.selectedIconUrl = selectedUrl;
             
-            const confirmationMessage = `
-            Community Details:
-            Name: ${ctx.session.communityData.name}
-            Description: ${ctx.session.communityData.description}
-            Selected Icon: Option ${selectedIndex + 1}
+            // Remove unselected images
+            ctx.session.communityData.potentialIconUrls = [selectedUrl];
 
-            Are you ready to create this community?`;
+            const confirmationMessage = `
+            **Coin Details:**
+            **Ticker:** ${ctx.session.communityData.name}
+            **Description:** ${ctx.session.communityData.description}
+
+            Are you ready to create this coin?`;
             
             await ctx.editMessageText(confirmationMessage, 
                 Markup.inlineKeyboard([
@@ -37,6 +39,26 @@ export const handleIconSelection = async (ctx: MyContext & { match: RegExpExecAr
                     Markup.button.callback('Send it', ACTIONS.CONFIRM_CREATION)
                 ])
             );
+
+            // Delete the messages with unselected images
+            if (ctx.chat && ctx.session.iconMessageIds) {
+                console.log('Attempting to delete unselected images');
+                console.log('Icon message IDs:', ctx.session.iconMessageIds);
+                for (let i = 0; i < ctx.session.iconMessageIds.length; i++) {
+                    if (i !== selectedIndex) {
+                        try {
+                            await ctx.telegram.deleteMessage(ctx.chat.id, ctx.session.iconMessageIds[i]);
+                            console.log(`Successfully deleted message with ID: ${ctx.session.iconMessageIds[i]}`);
+                        } catch (deleteError) {
+                            console.error(`Failed to delete message with ID: ${ctx.session.iconMessageIds[i]}`, deleteError);
+                        }
+                    }
+                }
+                ctx.session.iconMessageIds = [ctx.session.iconMessageIds[selectedIndex]];
+                console.log('Updated icon message IDs:', ctx.session.iconMessageIds);
+            } else {
+                console.log('Chat or iconMessageIds not available for deletion');
+            }
         } else {
             console.error('Invalid selection or potentialUrls not found');
             await ctx.answerCbQuery('Invalid selection');

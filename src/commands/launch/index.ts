@@ -11,9 +11,13 @@ DONE:
 2. at end of completion with image, description, and name, 
    should return a button allowing the user to create the community
 3. Add Button to Cancel through the flow and Generate Remaning for Me
+4. add a little loading gif while 1) image is being generated and 2) community is being created 3) and random community is being generated
+5. Clean Up the messsages after each step
 
-TODO:
-
-1. add a little loading gif while 1) image is being generated and 2) community is being created 3) and random community is being generated
+MAYBE: 
+1. Message formatting, should be cleaned up
+2. Get rid of images after making selection
+3. Loading image / GIF
+4. Clean up and actually trigger app launch in community
 
 */
