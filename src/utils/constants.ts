@@ -1,14 +1,14 @@
 export const STATES = {
     // States for /launch
-    AWAITING_NAME: 'awaiting_name',
-    AWAITING_DESCRIPTION: 'awaiting_description',
-    AWAITING_ICON_SELECTION: 'awaiting_icon_selection',
-    AWAITING_ADDRESS: 'awaiting_address',
+    LAUNCH_AWAITING_NAME: 'LAUNCH_AWAITING_NAME',
+    LAUNCH_AWAITING_DESCRIPTION: 'LAUNCH_AWAITING_DESCRIPTION',
+    LAUNCH_AWAITING_ICON_SELECTION: 'LAUNCH_AWAITING_ICON_SELECTION',
+    LAUNCH_AWAITING_ADDRESS: 'LAUNCH_AWAITING_ADDRESS',
     
     // States for /buy and /sell in trade.ts command
-    AWAITING_TICKER: 'awaiting_ticker',
-    AWAITING_AMOUNT: 'awaiting_amount',
-    AWAITING_CONFIRMATION: 'awaiting_confirmation',
+    AWAITING_TICKER: 'AWAITING_TICKER',
+    AWAITING_AMOUNT: 'AWAITING_AMOUNT',
+    AWAITING_CONFIRMATION: 'AWAITING_CONFIRMATION',
 };
 
 export const ACTIONS = {

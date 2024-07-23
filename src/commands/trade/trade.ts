@@ -26,7 +26,7 @@ const tradeCommand = async (ctx: MyContext, action: 'buy' | 'sell') => {
   console.log('Current session state:', ctx.session.state);
   ctx.session.state = STATES.AWAITING_TICKER;
   console.log('Updated session state:', ctx.session.state);
-  ctx.session.tradeData = { ticker: '', amount: 0, action };
+  ctx.session.tradeData = { ticker: '', amount: 0, action, unit: 'ETH' };
   console.log('Trade data set:', ctx.session.tradeData);
   const tokens = getDummyTokens();
   console.log('Tokens retrieved:', tokens);

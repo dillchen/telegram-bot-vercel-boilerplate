@@ -5,7 +5,8 @@ import {
   appCommand,
   coinRateCommand,
   setupLaunchCommand,
-  setupTradeCommand
+  setupTradeCommand,
+  createClub
 } from './commands';
 import { greeting } from './text';
 import { VercelRequest, VercelResponse } from '@vercel/node';
@@ -28,17 +29,17 @@ async function setupBot() {
       defaultSession: (): MyContext['session'] => ({
         state: null,
         communityData: {},
-        tradeData: { ticker: '', amount: 0, action: 'buy' }
+        tradeData: { ticker: '', amount: 0, action: 'buy', unit: 'ETH' }
       })
     }));
 
     bot.command('app', appCommand());
-    setupLaunchCommand(bot); // sets up /launch command via commands/launch
-    setupTradeCommand(bot); // sets up /buy and /sell command via commands/trade
     bot.command('help', (ctx) => ctx.reply('How to use the bot'));
     bot.command('about', about());
     bot.command('rates', coinRateCommand);
-    
+    bot.command('createClub', createClub());
+    setupTradeCommand(bot); // sets up /buy and /sell command via commands/trade
+    setupLaunchCommand(bot); // sets up /launch command via commands/launch
 
     const commands = [
       { command: 'app', description: 'Access the web app' },
@@ -47,6 +48,7 @@ async function setupBot() {
       { command: 'about', description: 'Information about the bot' },
       { command: 'buy', description: 'Buy a token' },
       { command: 'sell', description: 'Sell a token' },
+      { command: 'createClub', description: 'Create a club and get an airdrop' },
     ];
 
     // Set bot commands
@@ -142,7 +144,8 @@ async function setupBot() {
       console.log('Received an update:', ctx.update);
     });
 
-    bot.catch((err, ctx) => {
+    // Update error handlers to use explicit types
+    bot.catch((err: Error, ctx: MyContext) => {
       console.error('An error occurred during bot execution:', err);
       console.log('Context of the error:', ctx);
     });
@@ -160,6 +163,6 @@ export const startVercel = async (req: VercelRequest, res: VercelResponse) => {
   await production(req, res, bot);
 };
 //dev mode
-ENVIRONMENT !== 'production' && development(bot).catch(error => {
+ENVIRONMENT !== 'production' && development(bot).catch((error: Error) => {
   console.error('Main: Error in development mode:', error);
 });

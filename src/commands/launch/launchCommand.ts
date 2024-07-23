@@ -14,7 +14,7 @@ export const launchCommand = async (ctx: MyContext) => {
         ctx.session = {
             state: null,
             communityData: {},
-            tradeData: { ticker: '', amount: 0, action: 'buy' }
+            tradeData: { ticker: '', amount: 0, action: 'buy', unit: 'ETH' }
         };
     }
     const message = await ctx.reply(
@@ -24,6 +24,6 @@ export const launchCommand = async (ctx: MyContext) => {
             Markup.button.callback('Cancel', ACTIONS.CANCEL_CREATION)
         ])
     );
-    ctx.session.state = STATES.AWAITING_NAME;
+    ctx.session.state = STATES.LAUNCH_AWAITING_NAME;
     ctx.session.launchMessageId = message.message_id;
 };

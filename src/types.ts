@@ -27,4 +27,5 @@ export interface TradeData {
     ticker: string;
     amount: number;
     action: 'buy' | 'sell';
+    unit: 'ETH' | string;
 }

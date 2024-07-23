@@ -8,8 +8,13 @@ import { sendLoadingMessage } from '../../utils/messageHelpers';
 export const setupLaunchHandlers = (bot: Telegraf<MyContext>) => {
     console.log('Setting up launch handlers');
 
-    // Handle text messages
-    bot.on('text', handleTextMessage);
+    // Handle text messages only when in a specific launch state
+    bot.on('text', (ctx, next) => {
+        if (ctx.session.state && ctx.session.state.startsWith('LAUNCH_')) {
+            return handleTextMessage(ctx, next);
+        }
+        return next();
+    });
 
     // Handle icon selection
     bot.action(/select_icon_(\d)/, handleIconSelection);
@@ -93,30 +98,34 @@ export const setupLaunchHandlers = (bot: Telegraf<MyContext>) => {
     });
 };
 
-// Handle different types of text messages based on the current state
-const handleTextMessage = async (ctx: MyContext) => {
-    if (!ctx.message || !('text' in ctx.message)) return;
+// Modify the handleTextMessage function
+const handleTextMessage = async (ctx: MyContext, next: () => Promise<void>) => {
+    if (!ctx.message || !('text' in ctx.message)) return next();
+
+    // If it's a command, pass to the next handler
+    if (ctx.message.text.startsWith('/')) return next();
 
     const state = ctx.session.state;
     const text = ctx.message.text;
 
-    if (state === STATES.AWAITING_NAME) {
+    if (state === STATES.LAUNCH_AWAITING_NAME) {
         await handleAwaitingName(ctx, text);
-    } else if (state === STATES.AWAITING_DESCRIPTION) {
+    } else if (state === STATES.LAUNCH_AWAITING_DESCRIPTION) {
         await handleAwaitingDescription(ctx, text);
-    } else if (state === STATES.AWAITING_ADDRESS) {
+    } else if (state === STATES.LAUNCH_AWAITING_ADDRESS) {
         await handleAwaitingAddress(ctx, text);
+    } else {
+        return next();
     }
 
     // Add buttons for "Generate the Rest" and "Cancel" after each step
-    if (state !== null && state !== STATES.AWAITING_ICON_SELECTION) {
+    if (state !== null && state !== STATES.LAUNCH_AWAITING_ICON_SELECTION)
         await ctx.reply('What would you like to do next?',
             Markup.inlineKeyboard([
                 Markup.button.callback('Generate the Rest', ACTIONS.GENERATE_REST),
                 Markup.button.callback('Cancel', ACTIONS.CANCEL_CREATION)
             ])
         );
-    }
 };
 
 // Generate a random community name, description, and icons
@@ -150,7 +159,7 @@ const handleRandomCommunity = async (ctx: MyContext) => {
             await ctx.telegram.deleteMessage(ctx.chat!.id, infoMessage.message_id);
         }, 5000);
 
-        ctx.session.state = STATES.AWAITING_ICON_SELECTION;
+        ctx.session.state = STATES.LAUNCH_AWAITING_ICON_SELECTION
     } catch (error) {
         console.error('Error generating random community:', error);
         await ctx.reply('Sorry, there was an error generating the random community. Please try again or enter a name manually.');
@@ -161,7 +170,7 @@ const handleRandomCommunity = async (ctx: MyContext) => {
 const handleAwaitingName = async (ctx: MyContext, text: string) => {
     ctx.session.communityData = { name: text };
     await ctx.reply('Please provide a description for your community.');
-    ctx.session.state = STATES.AWAITING_DESCRIPTION;
+    ctx.session.state = STATES.LAUNCH_AWAITING_DESCRIPTION;
 };
 
 // Handle the community description input and generate icons
@@ -180,11 +189,11 @@ const handleAwaitingDescription = async (ctx: MyContext, text: string) => {
         
         await sendIconSelectionMessage(ctx, iconUrls);
         
-        ctx.session.state = STATES.AWAITING_ICON_SELECTION;
+        ctx.session.state = STATES.LAUNCH_AWAITING_ICON_SELECTION;
     } catch (error) {
         console.error('Error generating images:', error);
         await ctx.reply('Sorry, there was an error generating the icons. Please provide your wallet address to continue.');
-        ctx.session.state = STATES.AWAITING_ADDRESS;
+        ctx.session.state = STATES.LAUNCH_AWAITING_ADDRESS;
     }
 };
 
@@ -226,7 +235,7 @@ const handleGenerateRest = async (ctx: MyContext) => {
     const state = ctx.session.state;
     
     try {
-        if (state === STATES.AWAITING_DESCRIPTION) {
+        if (state === STATES.LAUNCH_AWAITING_DESCRIPTION) {
             const description = await generateText(`Generate a short description for a community called '${ctx.session.communityData.name}'`);
             ctx.session.communityData.description = description;
         }
@@ -253,7 +262,7 @@ const handleGenerateRest = async (ctx: MyContext) => {
             await ctx.telegram.deleteMessage(ctx.chat!.id, infoMessage.message_id);
         }, 5000);
 
-        ctx.session.state = STATES.AWAITING_ICON_SELECTION;
+        ctx.session.state = STATES.LAUNCH_AWAITING_ICON_SELECTION;
     } catch (error) {
         console.error('Error generating community details:', error);
         await ctx.reply('Sorry, there was an error generating the community details. Please try again.');
