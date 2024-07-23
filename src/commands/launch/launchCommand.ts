@@ -5,12 +5,16 @@ import { STATES, ACTIONS } from '../../constants';
 
 export const launchCommand = async (ctx: MyContext) => {
     if (!ctx.session) {
-        ctx.session = { state: null, communityData: {} };
+        ctx.session = {
+            state: null,
+            communityData: {},
+            tradeData: { ticker: '', amount: 0, action: 'buy' }
+        };
     }
 
     await ctx.reply(
-        'Launch a community! Type your idea',
-        Markup.keyboard([['Random Community']])
+        'Launch a coin! Type your idea',
+        Markup.keyboard([['Random Coin']])
             .oneTime()
             .resize()
     );

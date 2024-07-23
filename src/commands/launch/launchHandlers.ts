@@ -75,7 +75,7 @@ const handleTextMessage = async (ctx: MyContext) => {
     const state = ctx.session.state;
     const text = ctx.message.text;
 
-    if (text === 'Generate Random Community') {
+    if (text === 'Random Coin') {
         await handleRandomCommunity(ctx);
     } else if (state === STATES.AWAITING_NAME) {
         await handleAwaitingName(ctx, text);
@@ -88,9 +88,9 @@ const handleTextMessage = async (ctx: MyContext) => {
 
 // Generate a random community name, description, and icons
 const handleRandomCommunity = async (ctx: MyContext) => {
-    await ctx.reply('Generating a random community...');
+    await ctx.reply('Generating a random coin...');
     try {
-        const name = await generateText('Generate a random community name, should be only 2 or 3 words');
+        const name = await generateText('Generate a random coin name, should be only 2 or 3 words');
         const description = await generateText(`Generate a short description for a community called '${name}'`);
         const iconUrls = await generateImages(description, 4);
 

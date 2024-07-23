@@ -13,7 +13,7 @@ DONE:
 
 TODO:
 
-1. Add Cow
-3. add a little loading gif while 1) image is being generated and 2) community is being created 3) and random community is being generated
+1. add a little loading gif while 1) image is being generated and 2) community is being created 3) and random community is being generated
+2. Add Button to Cancel through the flow and Generate Remaning for Me
 
 */
