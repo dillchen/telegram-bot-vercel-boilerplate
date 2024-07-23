@@ -7,24 +7,36 @@ import { handleIconSelection } from './iconSelectionHandler';
 export const setupLaunchHandlers = (bot: Telegraf<MyContext>) => {
     console.log('Setting up launch handlers');
 
+    // Handle text messages
     bot.on('text', handleTextMessage);
+
+    // Handle icon selection
     bot.action(/select_icon_(\d)/, handleIconSelection);
 
+    // Handle cancellation of community creation
     bot.action(ACTIONS.CANCEL_CREATION, async (ctx) => {
         await ctx.answerCbQuery('Community creation cancelled');
         await ctx.editMessageText('Community creation cancelled. Use /launch to start over.');
         ctx.session.state = null;
     });
 
+    // Handle confirmation of community creation
     bot.action(ACTIONS.CONFIRM_CREATION, async (ctx) => {
         await ctx.answerCbQuery('Creating your community...');
         await ctx.editMessageText('Creating your community...');
 
         try {
-            // Simulate community creation (replace with actual creation logic)
+            /* TODO: cc: @Ian 
+            Simulate community creation (replace with actual creation logic)
+
+            1. Requires Community Creation API
+            2. Requires Contract Launching SDK
+            3. (Maybe) Requires additional prompt or something
+
+            */ 
             await new Promise(resolve => setTimeout(resolve, 2000));
             const contractAddress = '0x' + Math.random().toString(16).substr(2, 40);
-            const shareLink = `${webAppUrl}/${contractAddress}`;
+            const shareLink = `${webAppUrl}/${ctx.session.communityData.name}`;
 
             const successMessage = `
             Community created successfully!
@@ -45,6 +57,7 @@ export const setupLaunchHandlers = (bot: Telegraf<MyContext>) => {
         ctx.session.state = null;
     });
 
+    // Handle sharing of community link
     bot.action(ACTIONS.SHARE_LINK, async (ctx) => {
         const shareLink = ctx.session.communityData.shareLink;
         await ctx.answerCbQuery('Link copied to clipboard!', { show_alert: true });
@@ -52,6 +65,7 @@ export const setupLaunchHandlers = (bot: Telegraf<MyContext>) => {
     });
 };
 
+// Handle different types of text messages based on the current state
 const handleTextMessage = async (ctx: MyContext) => {
     if (!ctx.message || !('text' in ctx.message)) return;
 
@@ -69,6 +83,7 @@ const handleTextMessage = async (ctx: MyContext) => {
     }
 };
 
+// Generate a random community name, description, and icons
 const handleRandomCommunity = async (ctx: MyContext) => {
     await ctx.reply('Generating a random community...');
     try {
@@ -94,12 +109,14 @@ const handleRandomCommunity = async (ctx: MyContext) => {
     }
 };
 
+// Handle the community name input
 const handleAwaitingName = async (ctx: MyContext, text: string) => {
     ctx.session.communityData = { name: text };
     await ctx.reply('Please provide a description for your community.');
     ctx.session.state = STATES.AWAITING_DESCRIPTION;
 };
 
+// Handle the community description input and generate icons
 const handleAwaitingDescription = async (ctx: MyContext, text: string) => {
     ctx.session.communityData.description = text;
     await ctx.reply('Generating icons for your community...');
@@ -123,6 +140,7 @@ const handleAwaitingDescription = async (ctx: MyContext, text: string) => {
     }
 };
 
+// Handle the wallet address input and attempt to create the community
 const handleAwaitingAddress = async (ctx: MyContext, text: string) => {
     ctx.session.communityData.address = text;
     await ctx.reply('Creating your community...');
@@ -137,6 +155,7 @@ const handleAwaitingAddress = async (ctx: MyContext, text: string) => {
     ctx.session.state = null;
 };
 
+// Send a message with icon options for selection
 const sendIconSelectionMessage = async (ctx: MyContext, iconUrls: string[]) => {
     await ctx.replyWithMediaGroup(iconUrls.map((url: string, index: number) => ({
         type: 'photo',
