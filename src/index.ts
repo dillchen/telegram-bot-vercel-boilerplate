@@ -48,7 +48,7 @@ async function setupBot() {
       { command: 'about', description: 'Information about the bot' },
       { command: 'buy', description: 'Buy a token' },
       { command: 'sell', description: 'Sell a token' },
-      { command: 'createClub', description: 'Create a club and get an airdrop' },
+      { command: 'createclub', description: 'Create a club' },
     ];
 
     // Set bot commands
@@ -145,7 +145,7 @@ async function setupBot() {
     });
 
     // Update error handlers to use explicit types
-    bot.catch((err: Error, ctx: MyContext) => {
+    bot.catch((err: unknown, ctx: MyContext) => {
       console.error('An error occurred during bot execution:', err);
       console.log('Context of the error:', ctx);
     });
